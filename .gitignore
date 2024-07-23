@@ -98,6 +98,10 @@ modules.order
 !.mailmap
 
 #
+# self-added files
+!.config
+
+#
 # Generated include files
 #
 /include/config/
