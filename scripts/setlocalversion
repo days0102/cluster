@@ -15,6 +15,9 @@ usage() {
 	exit 1
 }
 
+# 不修改 version
+LOCALVERSION=
+
 scm_only=false
 srctree=.
 if test "$1" = "--save-scmversion"; then
