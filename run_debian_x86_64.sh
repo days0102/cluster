@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Note: This file is referred to 
+# https://github.com/runninglinuxkernel/runninglinuxkernel_5.0/blob/rlk_5.0/run_debian_x86_64.sh
+
 LROOT=$PWD
 JOBCOUNT=${JOBCOUNT=$(nproc)}
 export ARCH=x86_64
@@ -13,7 +16,7 @@ rootfs_image=$PWD/rootfs_debian_x86_64.ext4
 
 rootfs_size=8192
 
-SMP="-smp 4"
+SMP="-smp 16 -enable-kvm -cpu host"
 
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 [arg]"
@@ -121,16 +124,18 @@ build_rootfs(){
 }
 
 run_qemu_debian(){
-		qemu-system-x86_64 -m 1024\
+		qemu-system-x86_64 -m 4096\
 			-nographic $SMP -kernel arch/x86/boot/bzImage \
-			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8" \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
 			-drive if=none,file=rootfs_debian_x86_64.ext4,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
-			--fsdev local,id=kmod_dev,path=./kmodules,security_model=none \
-			-device virtio-9p-pci,fsdev=kmod_dev,mount_tag=kmod_mount\
 			$DBG
+			# --fsdev local,id=kmod_dev,path=./kmodules,security_model=none \
+			# -device virtio-9p-pci,fsdev=kmod_dev,mount_tag=kmod_mount\
+			# -net user,hostfwd=tcp::8888-:22 \
+			# -net nic,model=virtio \
 
 }
 
@@ -170,3 +175,4 @@ case $1 in
 		run_qemu_debian
 		;;
 esac
+
