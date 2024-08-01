@@ -411,4 +411,9 @@ source "fs/unicode/Kconfig"
 config IO_WQ
 	bool
 
+	
+# Lustre
+source "fs/lustre/Kconfig"
+
+
 endmenu
