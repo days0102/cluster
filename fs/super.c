@@ -595,6 +595,13 @@ struct super_block *sget(struct file_system_type *type,
 retry:
 	spin_lock(&sb_lock);
 	if (test) {
+		/**
+		 * @brief 根据传入的参数和条件，从系统中查找或创建一个超级块。
+		 * 通常，每个挂载点会有自己的超级块，但超级块也可以在多个挂载点之间共享。例如：
+		 * 1.子挂载(SB_SUBMOUNT):挂载一个子目录（子文件系统）时，可能会复用父文件系统超级块
+		 * 2.绑定挂载:绑定挂载允许将一个目录重新挂载到文件系统的另一个位置
+		 * 3.只读文件系统:如只读 NFS 多个客户端可能共享一个超级块实例，从而减少内存开销和管理复杂性
+		 */
 		hlist_for_each_entry(old, &type->fs_supers, s_instances) {
 			if (!test(old, data))
 				continue;
