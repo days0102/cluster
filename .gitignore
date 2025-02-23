@@ -169,3 +169,8 @@ sphinx_*/
 
 
 *.ext4
+
+
+# ingore image
+lustre_*.img
+lustre_*.img_*

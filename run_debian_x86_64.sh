@@ -14,9 +14,21 @@ kernel_build=$PWD/rootfs_debian_x86_64/usr/src/linux/
 rootfs_path=$PWD/rootfs_debian_x86_64
 rootfs_image=$PWD/rootfs_debian_x86_64.ext4
 
-rootfs_size=8192
+rootfs_size=6144
+lustre_rootfs_size=6144
+cn_rootfs_size=6144
+login_rootfs_size=6144
+
+lustre_ost_size=10240
+lustre_ost_name=$PWD/lustre_ost.img
+lustre_mdt_size=5120
+lustre_mdt_name=$PWD/lustre_mdt.img
+lustre_mgs_size=2560
+lustre_mgs_name=$PWD/lustre_mgs.img
 
 SMP="-smp 16 -enable-kvm -cpu host"
+CN_SMP="-smp 3 -enable-kvm -cpu host"
+LUSTRE_SMP="-smp 2 -enable-kvm -cpu host"
 
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 [arg]"
@@ -37,6 +49,18 @@ make_kernel_image(){
 		echo "start build kernel image..."
 		make debian_defconfig
 		make -j $JOBCOUNT
+}
+
+make_lustre_image(){
+		echo "start build lustre ost image..."
+		dd if=/dev/zero of=${lustre_ost_name}_1 bs=1M count=$lustre_ost_size
+		dd if=/dev/zero of=${lustre_ost_name}_2 bs=1M count=$lustre_ost_size
+		dd if=/dev/zero of=${lustre_ost_name}_3 bs=1M count=$lustre_ost_size
+		dd if=/dev/zero of=${lustre_ost_name}_4 bs=1M count=$lustre_ost_size
+		echo "start build lustre mdt image..."
+		dd if=/dev/zero of=${lustre_mdt_name} bs=1M count=$lustre_mdt_size
+		echo "start build lustre mgs image..."
+		dd if=/dev/zero of=${lustre_mgs_name} bs=1M count=$lustre_mgs_size
 }
 
 prepare_rootfs(){
@@ -136,7 +160,122 @@ run_qemu_debian(){
 			# -device virtio-9p-pci,fsdev=kmod_dev,mount_tag=kmod_mount\
 			# -net user,hostfwd=tcp::8888-:22 \
 			# -net nic,model=virtio \
+}
 
+run_lustre_oss_1(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_oss_1.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:1c \
+			-netdev user,id=mynet \
+			-device virtio-net-pci,netdev=mynet\
+			-drive if=none,file=${lustre_ost_name}_1,id=hd1 \
+			-device virtio-blk-pci,drive=hd1 \
+			# -netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			# -device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:3c \
+			$DBG
+			# --fsdev local,id=kmod_dev,path=./kmodules,security_model=none \
+			# -device virtio-9p-pci,fsdev=kmod_dev,mount_tag=kmod_mount\
+			# -net user,hostfwd=tcp::8888-:22 \
+			# -net nic,model=virtio \
+}
+
+run_lustre_oss_2(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_oss_2.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:2c \
+			-drive if=none,file=${lustre_ost_name}_2,id=hd2 \
+			-device virtio-blk-pci,drive=hd2 \
+			$DBG
+}
+
+run_lustre_oss_3(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_oss_3.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=82:d4:09:62:cd:3c \
+			-drive if=none,file=${lustre_ost_name}_3,id=hd1 \
+			-device virtio-blk-pci,drive=hd1 \
+			-drive if=none,file=${lustre_ost_name}_4,id=hd2 \
+			-device virtio-blk-pci,drive=hd2 \
+			$DBG
+}
+
+run_lustre_mds(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_mds.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:2d:4c \
+			-drive if=none,file=${lustre_mgs_name},id=hd1 \
+			-device virtio-blk-pci,drive=hd1 \
+			-drive if=none,file=${lustre_mdt_name},id=hd2 \
+			-device virtio-blk-pci,drive=hd2 \
+			$DBG
+}
+
+run_cn_1(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_cn_1.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev user,id=mynet\
+			-device virtio-net-pci,netdev=mynet\
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:19:62:2d:5c \
+			$DBG
+}
+
+run_cn_2(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_cn_2.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev user,id=mynet\
+			-device virtio-net-pci,netdev=mynet\
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:29:62:2d:6c \
+			$DBG
+}
+
+run_cn_3(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_cn_3.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev user,id=mynet\
+			-device virtio-net-pci,netdev=mynet\
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:39:62:2d:7c \
+			$DBG
+}
+
+run_master(){
+		sudo qemu-system-x86_64 -m 8094\
+			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_master.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev user,id=mynet\
+			-device virtio-net-pci,netdev=mynet\
+			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet,mac=80:d4:39:62:2d:8c \
+			$DBG
 }
 
 case $1 in
@@ -155,6 +294,60 @@ case $1 in
 	update_rootfs)
 		check_root
 		update_rootfs
+		;;
+	build_images)
+		make_lustre_image
+		;;
+	run_lustre_oss)
+		if [ ! -f $LROOT/arch/x86/boot/bzImage ]; then
+			echo "canot find kernel image, pls run build_kernel command firstly!!"
+			echo "./run_debian_x86_64.sh build_kernel"
+			exit 1
+		fi
+
+		if [ ! -f $rootfs_image ]; then
+			echo "canot find rootfs image, pls run build_rootfs command firstly!!"
+			echo "sudo ./run_debian_x86_64.sh build_rootfs"
+			exit 1
+		fi
+
+		run_lustre_oss_1
+		;;
+	run_lustre_oss_1)
+		run_lustre_oss_1
+		;;
+	run_lustre_oss_2)
+		run_lustre_oss_2
+		;;
+	run_lustre_oss_3)
+		run_lustre_oss_3
+		;;
+	run_lustre_mds)
+		if [ ! -f $LROOT/arch/x86/boot/bzImage ]; then
+			echo "canot find kernel image, pls run build_kernel command firstly!!"
+			echo "./run_debian_x86_64.sh build_kernel"
+			exit 1
+		fi
+
+		if [ ! -f $rootfs_image ]; then
+			echo "canot find rootfs image, pls run build_rootfs command firstly!!"
+			echo "sudo ./run_debian_x86_64.sh build_rootfs"
+			exit 1
+		fi
+
+		run_lustre_mds
+		;;
+	run_cn_1)
+		run_cn_1
+		;;
+	run_cn_2)
+		run_cn_2
+		;;
+	run_cn_3)
+		run_cn_3
+		;;
+	run_master)
+		run_master
 		;;
 	run)
 

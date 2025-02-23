@@ -1,0 +1,13 @@
+#!/bin/sh
+ 
+br0_exist_flag=`ifconfig|grep -ci "br0"`
+if [ $br0_exist_flag -eq 0 ];then
+	sudo brctl addbr br0
+	sudo ifconfig br0 192.168.203.100 netmask 255.255.255.0 up
+	sudo route add -net 192.168.203.0 netmask 255.255.255.0 br0
+	sudo route add default gw 192.168.203.1 dev br0 metric 9999
+fi
+ 
+sudo tunctl -t $1 -u root
+sudo ifconfig $1 up
+sudo brctl addif br0 $1
