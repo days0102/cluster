@@ -191,6 +191,8 @@ run_lustre_oss_2(){
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:2c \
+			-netdev user,id=mynet \
+			-device virtio-net-pci,netdev=mynet\
 			-drive if=none,file=${lustre_ost_name}_2,id=hd2 \
 			-device virtio-blk-pci,drive=hd2 \
 			$DBG
@@ -204,6 +206,8 @@ run_lustre_oss_3(){
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=82:d4:09:62:cd:3c \
+			-netdev user,id=mynet \
+			-device virtio-net-pci,netdev=mynet\
 			-drive if=none,file=${lustre_ost_name}_3,id=hd1 \
 			-device virtio-blk-pci,drive=hd1 \
 			-drive if=none,file=${lustre_ost_name}_4,id=hd2 \
@@ -219,6 +223,8 @@ run_lustre_mds(){
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:2d:4c \
+			-netdev user,id=mynet \
+			-device virtio-net-pci,netdev=mynet\
 			-drive if=none,file=${lustre_mgs_name},id=hd1 \
 			-device virtio-blk-pci,drive=hd1 \
 			-drive if=none,file=${lustre_mdt_name},id=hd2 \
@@ -366,6 +372,19 @@ case $1 in
 		#prepare_rootfs
 		#build_rootfs
 		run_qemu_debian
+		;;
+	run_cluster)
+		# 启动 cn1, cn2, cn3, mds, oss1 等节点并行运行
+		run_cn_1 &
+		run_cn_2 &
+		run_cn_3 &
+		run_lustre_mds &
+		run_lustre_oss_1 &
+		run_lustre_oss_2 &
+		run_lustre_oss_3 &
+
+		# 等待所有后台进程
+		wait
 		;;
 esac
 
