@@ -169,7 +169,7 @@ sphinx_*/
 
 
 *.ext4
-
+*.ext4.bp
 
 # ingore image
 lustre_*.img

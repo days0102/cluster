@@ -284,6 +284,21 @@ run_master(){
 			$DBG
 }
 
+run_ion(){
+		sudo qemu-system-x86_64 -m 4096\
+			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
+			-drive if=none,file=rootfs_ion.ext4,id=hd0 \
+			-device virtio-blk-pci,drive=hd0 \
+			-netdev user,id=mynet\
+			-device virtio-net-pci,netdev=mynet\
+			-netdev tap,id=tapnet1,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet1,mac=80:d4:39:62:2d:9c \
+			-netdev tap,id=tapnet2,script=$PWD/net_up,downscript=$PWD/net_down \
+			-device virtio-net-pci,netdev=tapnet2,mac=80:d4:39:62:2d:9d \
+			$DBG
+}
+
 case $1 in
 	build_kernel)
 		make_kernel_image
@@ -354,6 +369,9 @@ case $1 in
 		;;
 	run_master)
 		run_master
+		;;
+	run_ion)
+		run_ion
 		;;
 	run)
 
