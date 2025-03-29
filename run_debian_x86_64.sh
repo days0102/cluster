@@ -122,8 +122,48 @@ update_rootfs(){
 
 			rm -rf $rootfs_path
 		fi
-
 }
+
+update_cluster_rootfs() {
+	rootfs_images=(
+		$PWD/rootfs_master.ext4
+		# $PWD/rootfs_mds.ext4
+		$PWD/rootfs_oss_1.ext4
+		# $PWD/rootfs_oss_2.ext4
+		# $PWD/rootfs_oss_3.ext4
+	)
+
+    if [ ${#rootfs_images[@]} -eq 0 ]; then
+        echo "No rootfs images provided. Please add images to the 'rootfs_images' array."
+        return 1
+    fi
+
+    for rootfs_image in "${rootfs_images[@]}"; do
+        if [ ! -f "$rootfs_image" ]; then
+            echo "Rootfs image $rootfs_image is not present. Please check the path or run build_rootfs."
+            continue
+        fi
+
+        echo "Updating rootfs image: $rootfs_image ..."
+
+        mkdir -p "$rootfs_path"
+        echo "Mounting ext4 image $rootfs_image into $rootfs_path"
+        mount -t ext4 "$rootfs_image" "$rootfs_path" -o loop
+
+        make install
+        make modules_install -j "$JOBCOUNT"
+        make headers_install
+
+        build_kernel_devel
+
+        umount "$rootfs_path"
+        chmod 777 "$rootfs_image"
+
+        rm -rf "$rootfs_path"
+        echo "Update completed for $rootfs_image."
+    done
+}
+
 
 build_rootfs(){
 		if [ ! -f $rootfs_image ]; then
@@ -315,6 +355,10 @@ case $1 in
 	update_rootfs)
 		check_root
 		update_rootfs
+		;;
+	update_cluster_rootfs)
+		check_root
+		update_cluster_rootfs
 		;;
 	build_images)
 		make_lustre_image
