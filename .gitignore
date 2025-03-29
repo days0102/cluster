@@ -174,3 +174,5 @@ sphinx_*/
 # ingore image
 lustre_*.img
 lustre_*.img_*
+
+ssd*.img

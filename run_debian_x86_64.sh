@@ -126,9 +126,10 @@ update_rootfs(){
 
 update_cluster_rootfs() {
 	rootfs_images=(
-		$PWD/rootfs_master.ext4
+		# $PWD/rootfs_master.ext4
+		$PWD/rootfs_ion.ext4
 		# $PWD/rootfs_mds.ext4
-		$PWD/rootfs_oss_1.ext4
+		# $PWD/rootfs_oss_1.ext4
 		# $PWD/rootfs_oss_2.ext4
 		# $PWD/rootfs_oss_3.ext4
 	)
@@ -336,6 +337,8 @@ run_ion(){
 			-device virtio-net-pci,netdev=tapnet1,mac=80:d4:39:62:2d:9c \
 			-netdev tap,id=tapnet2,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet2,mac=80:d4:39:62:2d:9d \
+			-drive file=ssd.img,if=none,id=nvme \
+			-device nvme,serial=hello,drive=nvme \
 			$DBG
 }
 
