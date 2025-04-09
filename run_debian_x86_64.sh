@@ -27,7 +27,9 @@ lustre_mgs_size=2560
 lustre_mgs_name=$PWD/lustre_mgs.img
 
 SMP="-smp 16 -enable-kvm -cpu host"
-CN_SMP="-smp 3 -enable-kvm -cpu host"
+# delete -cpu host to avoid slurmd -C different from lscpu
+CN_SMP="-smp cpus=3,sockets=1,cores=3,threads=1 -enable-kvm"
+MASTER_SMP="-smp 4 -enable-kvm -cpu host"
 LUSTRE_SMP="-smp 2 -enable-kvm -cpu host"
 
 if [ $# -lt 1 ]; then
@@ -314,7 +316,7 @@ run_cn_3(){
 
 run_master(){
 		sudo qemu-system-x86_64 -m 8094\
-			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
+			-nographic $MASTER_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
 			-drive if=none,file=rootfs_master.ext4,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
