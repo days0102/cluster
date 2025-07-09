@@ -19,12 +19,16 @@ lustre_rootfs_size=6144
 cn_rootfs_size=6144
 login_rootfs_size=6144
 
+# modify the following variables to change the image path
+# $PWD is the good place.
+LUSTRE_IMG_PATH=/hub/lustre-data/
+
 lustre_ost_size=10240
-lustre_ost_name=$PWD/lustre_ost.img
+lustre_ost_name=$LUSTRE_IMG_PATH/lustre_ost.img
 lustre_mdt_size=5120
-lustre_mdt_name=$PWD/lustre_mdt.img
+lustre_mdt_name=$LUSTRE_IMG_PATH/lustre_mdt.img
 lustre_mgs_size=2560
-lustre_mgs_name=$PWD/lustre_mgs.img
+lustre_mgs_name=$LUSTRE_IMG_PATH/lustre_mgs.img
 
 SMP="-smp 16 -enable-kvm -cpu host"
 # delete -cpu host to avoid slurmd -C different from lscpu
