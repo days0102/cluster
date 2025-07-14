@@ -30,6 +30,20 @@ lustre_mdt_name=$LUSTRE_IMG_PATH/lustre_mdt.img
 lustre_mgs_size=2560
 lustre_mgs_name=$LUSTRE_IMG_PATH/lustre_mgs.img
 
+# modify the following variables to change the image path
+# $PWD is the good place.
+ROOTFS_PATH=/hub/lustre-data/
+
+lustre_master_path=$ROOTFS_PATH/rootfs_master.ext4
+lustre_ion_path=$ROOTFS_PATH/rootfs_ion.ext4
+lustre_mds_path=$ROOTFS_PATH/rootfs_mds.ext4
+lustre_oss_1_path=$ROOTFS_PATH/rootfs_oss_1.ext4
+lustre_oss_2_path=$ROOTFS_PATH/rootfs_oss_2.ext4
+lustre_oss_3_path=$ROOTFS_PATH/rootfs_oss_3.ext4
+lustre_cn_1_path=$ROOTFS_PATH/rootfs_cn_1.ext4
+lustre_cn_2_path=$ROOTFS_PATH/rootfs_cn_2.ext4
+lustre_cn_3_path=$ROOTFS_PATH/rootfs_cn_3.ext4
+
 SMP="-smp 16 -enable-kvm -cpu host"
 # delete -cpu host to avoid slurmd -C different from lscpu
 CN_SMP="-smp cpus=3,sockets=1,cores=3,threads=1 -enable-kvm"
@@ -213,7 +227,7 @@ run_lustre_oss_1(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_oss_1.ext4,id=hd0 \
+			-drive if=none,file=$lustre_oss_1_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:1c \
@@ -234,7 +248,7 @@ run_lustre_oss_2(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_oss_2.ext4,id=hd0 \
+			-drive if=none,file=$lustre_oss_2_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:cd:2c \
@@ -249,7 +263,7 @@ run_lustre_oss_3(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_oss_3.ext4,id=hd0 \
+			-drive if=none,file=$lustre_oss_3_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=82:d4:09:62:cd:3c \
@@ -266,7 +280,7 @@ run_lustre_mds(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $LUSTRE_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_mds.ext4,id=hd0 \
+			-drive if=none,file=$lustre_mds_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev tap,id=tapnet,script=$PWD/net_up,downscript=$PWD/net_down \
 			-device virtio-net-pci,netdev=tapnet,mac=80:d4:09:62:2d:4c \
@@ -283,7 +297,7 @@ run_cn_1(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_cn_1.ext4,id=hd0 \
+			-drive if=none,file=$lustre_cn_1_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
@@ -296,7 +310,7 @@ run_cn_2(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_cn_2.ext4,id=hd0 \
+			-drive if=none,file=$lustre_cn_2_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
@@ -309,7 +323,7 @@ run_cn_3(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_cn_3.ext4,id=hd0 \
+			-drive if=none,file=$lustre_cn_3_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
@@ -322,7 +336,7 @@ run_master(){
 		sudo qemu-system-x86_64 -m 8094\
 			-nographic $MASTER_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_master.ext4,id=hd0 \
+			-drive if=none,file=$lustre_master_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
@@ -335,7 +349,7 @@ run_ion(){
 		sudo qemu-system-x86_64 -m 4096\
 			-nographic $CN_SMP -kernel arch/x86/boot/bzImage \
 			-append "noinintrd console=ttyS0 crashkernel=256M root=/dev/vda rootfstype=ext4 rw loglevel=8 nokaslr" \
-			-drive if=none,file=rootfs_ion.ext4,id=hd0 \
+			-drive if=none,file=$lustre_ion_path,id=hd0 \
 			-device virtio-blk-pci,drive=hd0 \
 			-netdev user,id=mynet\
 			-device virtio-net-pci,netdev=mynet\
